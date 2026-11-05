@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="QCM d'entraînement en réseaux (SR71) : modèles, IPv4/IPv6, VLAN, DHCP, STP, routage statique et dynamique.">
+<style>[hidden]{display:none!important} body{margin:0}</style>
+<title>QCM Réseaux SR71</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: une colonne étroite, trois vues (réglages, question, résultats), ton de terminal sobre. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #f5f7f9;
+  --ink: #15212b;
+  --muted: #566672;
+  --line: #d2d9e0;
+  --accent: #0a6a86;
+  --accent-ink: #ffffff;
+  --good: #17703f;
+  --good-bg: #e3f3ea;
+  --bad: #a82f1d;
+  --bad-bg: #fbe9e5;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e151b; --surface: #16202a; --surface-2: #1b2733; --ink: #e4ebf1; --muted: #9aaab7;
+    --line: #2b3947; --accent: #52bddb; --accent-ink: #06222b; --good: #62c991; --good-bg: #12301f;
+    --bad: #f08a78; --bad-bg: #37191a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e151b; --surface: #16202a; --surface-2: #1b2733; --ink: #e4ebf1; --muted: #9aaab7;
+  --line: #2b3947; --accent: #52bddb; --accent-ink: #06222b; --good: #62c991; --good-bg: #12301f;
+  --bad: #f08a78; --bad-bg: #37191a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
+h1 { font-size: 1.75rem; font-weight: 600; }
+h2 { font-size: 1.25rem; font-weight: 600; }
+p { margin: 0; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.05em 0.35em; overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); border-radius: 6px; padding: 10px 18px; font-weight: 600; }
+.btn:hover { filter: brightness(1.08); }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; filter: none; }
+.btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 10px 18px; font-weight: 500; }
+.btn-quiet:hover { background: var(--surface-2); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.row.between { justify-content: space-between; }
+
+/* Réglages */
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.theme { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.theme .tick { flex: none; width: 18px; height: 18px; border: 1.5px solid var(--muted); border-radius: 4px; margin-top: 3px; display: grid; place-items: center; font-size: 12px; line-height: 1; color: var(--accent-ink); }
+.theme[aria-pressed="true"] { border-color: var(--accent); background: var(--surface-2); }
+.theme[aria-pressed="true"] .tick { background: var(--accent); border-color: var(--accent); }
+.theme[aria-pressed="false"] .tick::after { content: ""; }
+.theme[aria-pressed="true"] .tick::after { content: "✓"; }
+.theme .name { font-weight: 500; display: block; }
+.theme .meta { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.field { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.field label { font-weight: 500; }
+select { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.check { display: flex; gap: 8px; align-items: center; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* Sections */
+.tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.tab { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tab .t { font-weight: 600; }
+.tab .d { font-size: 0.85rem; color: var(--muted); }
+.tab[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--surface-2); }
+.badge { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; padding: 1px 6px; }
+
+/* Question */
+.progress { display: flex; flex-direction: column; gap: 8px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width 0.25s ease; }
+.qtext { font-size: 1.2rem; font-weight: 500; line-height: 1.4; text-wrap: pretty; }
+.opts { display: flex; flex-direction: column; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.opt { width: 100%; text-align: left; display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; min-width: 0; }
+.opt:hover:not([aria-disabled="true"]) { border-color: var(--accent); background: var(--surface-2); }
+.opt .key { flex: none; font-family: var(--font-mono); width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 5px; display: grid; place-items: center; font-size: 0.85rem; color: var(--muted); }
+.opt .label { min-width: 0; overflow-wrap: anywhere; padding-top: 2px; }
+.opt[aria-disabled="true"] { cursor: default; }
+.opt.is-right { background: var(--good-bg); border-color: var(--good); }
+.opt.is-right .key { background: var(--good); border-color: var(--good); color: var(--bg); }
+.opt.is-wrong { background: var(--bad-bg); border-color: var(--bad); }
+.opt.is-wrong .key { background: var(--bad); border-color: var(--bad); color: var(--bg); }
+.feedback { border-radius: 6px; padding: 12px 14px; border: 1px solid var(--line); background: var(--surface-2); display: flex; flex-direction: column; gap: 4px; }
+.feedback.ok { border-color: var(--good); background: var(--good-bg); }
+.feedback.ko { border-color: var(--bad); background: var(--bad-bg); }
+.feedback strong { font-weight: 600; }
+
+/* Résultats */
+.score { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.score .big { font-size: 3rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.bytheme { display: flex; flex-direction: column; gap: 10px; }
+.bt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+.bt .bar { grid-column: 1 / -1; }
+.bt .n { font-family: var(--font-mono); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.bt .bar > i.low { background: var(--bad); }
+.bt .bar > i.mid { background: var(--accent); }
+.bt .bar > i.high { background: var(--good); }
+details.miss { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+details.miss summary { cursor: pointer; padding: 10px 14px; font-weight: 500; }
+details.miss .body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 6px; }
+.tag-bad { color: var(--bad); font-weight: 600; }
+.tag-good { color: var(--good); font-weight: 600; }
+.hint { font-size: 0.85rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+
+<script>
+(function () {
+  var THEMES = [
+    { name: "Modèles et IOS", mods: "Modules 1–2" },
+    { name: "Physique et liaison", mods: "Module 3" },
+    { name: "Réseau et ARP", mods: "Module 4" },
+    { name: "Sous-réseaux IPv4", mods: "Module 4" },
+    { name: "IPv6", mods: "Modules 4 et 7" },
+    { name: "Transport et applications", mods: "Module 5" },
+    { name: "VLAN et trunks", mods: "Module 6" },
+    { name: "DHCP", mods: "Module 7" },
+    { name: "STP", mods: "Module 8 (STP)" },
+    { name: "Routage statique", mods: "Module 8 (routage statique)" },
+    { name: "Routage dynamique (RIP, OSPF)", mods: "Module 10" }
+  ];
+
+  var Q = [];
+  /* add(thème, question, bonne réponse, [3 mauvaises], explication) ; [[x]] = code */
+  function add(t, q, good, bad, e) { Q.push({ t: t, q: q, o: [good].concat(bad), e: e, src: "exam" }); }
+  /* Questions originales (hors banque d'examens) : même format */
+  function orig(t, q, good, bad, e) { Q.push({ t: t, q: q, o: [good].concat(bad), e: e, src: "orig" }); }
+
+  // 0 Modèles et IOS
+  add(0, "Quelle couche du modèle TCP/IP regroupe les couches application, présentation et session du modèle OSI ?", "Application", ["Transport", "Internet", "Accès réseau"], "Les trois couches hautes d'OSI correspondent à la seule couche application de TCP/IP.");
+  add(0, "Quelle couche TCP/IP assure l'adressage logique et le routage entre réseaux ?", "Internet", ["Application", "Transport", "Accès réseau"], "La couche Internet correspond à la couche réseau d'OSI : IPv4, IPv6, ICMP.");
+  add(0, "Dans quel ordre se succèdent les unités de données lors de l'encapsulation, de l'application vers le support ?", "Données, segment, paquet, trame, bits", ["Données, paquet, segment, trame, bits", "Segment, données, trame, paquet, bits", "Données, trame, paquet, segment, bits"], "La couche transport crée le segment, la couche réseau le paquet, la liaison la trame, puis la couche physique émet des bits.");
+  add(0, "Lequel de ces éléments figure dans l'en-tête de la couche transport ?", "Le numéro de port de destination", ["L'adresse MAC de destination", "L'adresse IP source", "Le champ FCS"], "Les ports sont en couche 4 ; l'adresse MAC et le FCS en couche 2, l'adresse IP en couche 3.");
+  add(0, "Quelle méthode d'accès à distance chiffre l'identifiant, le mot de passe et toute la session ?", "SSH", ["Telnet", "Le port console", "Le port AUX"], "Telnet envoie tout en clair ; la console et l'AUX sont des accès locaux ou hors bande.");
+  add(0, "Quelle commande fait passer du mode utilisateur ([[Switch>]]) au mode privilégié ([[Switch#]]) ?", "[[enable]]", ["[[configure terminal]]", "[[exit]]", "[[login]]"], "[[enable]] ouvre le mode privilégié ; [[configure terminal]] se tape ensuite pour la configuration globale.");
+  add(0, "Quel est l'effet de [[service password-encryption]] ?", "Il masque les mots de passe en clair de la configuration", ["Il chiffre le trafic Telnet", "Il exige un mot de passe pour le mode privilégié", "Il active SSH sur les lignes vty"], "Il protège les mots de passe visibles dans la configuration contre une lecture rapide ; il ne chiffre pas le trafic.");
+
+  // 1 Physique et liaison
+  add(1, "Quel est le rôle de la sous-couche LLC ?", "Identifier le protocole de couche réseau encapsulé dans la trame", ["Délimiter les champs de la trame et calculer le FCS", "Contrôler l'accès au support", "Fournir l'adresse physique"], "LLC fait le lien avec la couche réseau (IPv4, IPv6) ; la sous-couche MAC gère la trame, l'adressage et l'accès au support.");
+  add(1, "Quelle méthode d'accès au support est utilisée par le sans fil ?", "CSMA/CA", ["CSMA/CD", "Le passage de jeton", "Aucune, le sans fil n'a pas de contention"], "Le sans fil évite les collisions (CA) ; CSMA/CD les détecte sur l'Ethernet semi-duplex.");
+  add(1, "Quel champ de la trame permet au destinataire de détecter une erreur de transmission ?", "Le FCS", ["Le champ de type", "L'adresse MAC source", "Le préambule"], "L'émetteur calcule un CRC placé dans le FCS ; le destinataire recalcule et compare.");
+  add(1, "Un commutateur reçoit une trame unicast dont l'adresse MAC de destination n'est pas dans sa table. Que fait-il ?", "Il la transmet sur tous les ports sauf celui d'entrée", ["Il l'abandonne", "Il la renvoie sur le port d'entrée", "Il la transmet seulement au routeur"], "C'est l'inondation d'une trame unicast inconnue, comme pour une diffusion.");
+  add(1, "Quelles informations un commutateur utilise-t-il pour remplir sa table MAC ?", "L'adresse MAC source et le port d'entrée", ["L'adresse MAC de destination et le port de sortie", "L'adresse IP source et le port d'entrée", "L'adresse MAC de destination et le port d'entrée"], "L'apprentissage se fait sur l'adresse source ; la destination sert à choisir le port de sortie.");
+  add(1, "Deux commutateurs sont reliés, sans VLAN. Que devient le domaine de diffusion ?", "Il s'agrandit pour couvrir les deux commutateurs", ["Chaque commutateur garde le sien", "Il est divisé en deux", "Il disparaît"], "Un commutateur ne filtre pas la diffusion ; seuls un routeur ou des VLAN séparent les domaines de diffusion.");
+  add(1, "Quelle topologie indique les adresses IP et les groupes de périphériques ?", "La topologie logique", ["La topologie physique", "La topologie en étoile", "La topologie en bus"], "La topologie physique montre l'emplacement et le câblage ; la logique montre l'adressage et les groupements.");
+
+  // 2 Réseau et ARP
+  add(2, "Un hôte veut joindre un réseau distant et sa table ARP est vide. De quelle adresse MAC a-t-il besoin ?", "Celle de la passerelle par défaut", ["Celle de l'hôte de destination", "Celle du serveur DNS", "Celle du commutateur"], "La trame est livrée au routeur local ; l'hôte distant n'est pas sur le même segment.");
+  add(2, "Quelle est l'adresse MAC de destination d'une requête ARP ?", "FF-FF-FF-FF-FF-FF (diffusion)", ["00-00-00-00-00-00", "L'adresse MAC de la passerelle", "L'adresse MAC de l'hôte cherché"], "La requête est diffusée parce que la MAC est encore inconnue ; la réponse est envoyée en unicast.");
+  add(2, "Un routeur décrémente le TTL d'un paquet IPv4 et obtient 0. Que fait-il ?", "Il rejette le paquet et envoie un message ICMP Time Exceeded à la source", ["Il transmet le paquet avec un TTL de 255", "Il renvoie un message Destination Unreachable", "Il met le paquet en attente"], "Le TTL empêche un paquet de circuler indéfiniment ; [[tracert]] exploite ce message.");
+  add(2, "Un paquet traverse plusieurs routeurs (sans NAT). Que change-t-il à chaque saut ?", "Les adresses MAC source et destination de la trame", ["L'adresse IP source", "L'adresse IP de destination", "Rien"], "Les adresses IP restent identiques de bout en bout ; chaque réseau a sa propre trame.");
+  add(2, "Quelle caractéristique décrit le protocole IP ?", "Sans connexion et sans garantie de livraison", ["Orienté connexion avec acquittements", "Il retransmet les paquets perdus", "Il dépend du type de support"], "IP fonctionne au mieux, sans connexion, indépendamment du support ; la fiabilité vient de TCP.");
+  add(2, "Un hôte a une mauvaise passerelle par défaut. Que se passe-t-il ?", "Il communique en local mais pas avec les autres réseaux", ["Il ne communique plus du tout", "Il ne peut plus envoyer de requête ARP", "Le commutateur bloque ses trames"], "La passerelle ne sert que pour les destinations situées hors du réseau local.");
+  add(2, "Quelle commande Windows affiche la table ARP ?", "[[arp -a]]", ["[[route print]]", "[[ipconfig /all]]", "[[netstat -s]]"], "[[route print]] affiche la table de routage de l'hôte, pas la table ARP.");
+
+  // 3 Sous-réseaux IPv4
+  add(3, "Quel est le plus petit masque qui permet d'adresser 25 hôtes ?", "255.255.255.224 (/27)", ["255.255.255.240 (/28)", "255.255.255.192 (/26)", "255.255.255.128 (/25)"], "Un /27 laisse 5 bits d'hôtes : 2^5 − 2 = 30 adresses utilisables.");
+  add(3, "Quel est le plus petit masque qui permet d'adresser 61 hôtes ?", "255.255.255.192 (/26)", ["255.255.255.224 (/27)", "255.255.255.128 (/25)", "255.255.255.240 (/28)"], "Un /26 donne 62 adresses utilisables ; un /27 n'en donne que 30.");
+  add(3, "Quel masque faut-il pour 200 hôtes ?", "255.255.255.0 (/24)", ["255.255.255.128 (/25)", "255.255.255.192 (/26)", "255.255.254.0 (/23)"], "Un /25 n'offre que 126 adresses ; un /24 en offre 254 et reste le plus petit qui convienne.");
+  add(3, "Combien d'hôtes utilisables contient un réseau /28 ?", "14", ["16", "15", "12"], "4 bits d'hôtes donnent 16 adresses, moins l'adresse réseau et l'adresse de diffusion.");
+  add(3, "L'adresse 192.168.1.100 est une adresse d'hôte utilisable de quel sous-réseau ?", "192.168.1.64/26", ["192.168.1.32/27", "192.168.1.0/26", "192.168.1.128/25"], "Le /26 commence à .64 et finit à .127 : les hôtes vont de .65 à .126.");
+  add(3, "On découpe un /24 en sous-réseaux /27. Combien obtient-on de sous-réseaux ?", "8", ["4", "16", "32"], "On emprunte 3 bits : 2^3 = 8 sous-réseaux de 32 adresses.");
+  add(3, "Quelle adresse est une adresse link-local IPv4, attribuée sans serveur DHCP ?", "169.254.12.7", ["127.0.0.1", "172.32.5.9", "192.168.0.1"], "169.254.0.0/16 est la plage d'auto-configuration ; 127.0.0.1 est la boucle locale.");
+  add(3, "Quelle est l'adresse de diffusion du réseau 172.16.40.0/22 ?", "172.16.43.255", ["172.16.40.255", "172.16.44.255", "172.16.47.255"], "Un /22 couvre 4 valeurs du 3e octet (40 à 43) ; la diffusion est donc 172.16.43.255.");
+
+  // 4 IPv6
+  add(4, "Quel est le préfixe des adresses IPv6 link-local ?", "FE80::/10", ["2001::/3", "FC00::/7", "FF00::/8"], "FC00::/7 correspond aux adresses locales uniques et FF00::/8 au multicast.");
+  add(4, "À qui s'adresse un paquet envoyé à FF02::2 ?", "À tous les routeurs IPv6 du lien", ["À tous les hôtes du lien", "À tous les serveurs DHCPv6", "À tous les hôtes du réseau"], "FF02::1 vise tous les nœuds du lien, FF02::2 tous les routeurs.");
+  add(4, "Quel est l'ID d'interface EUI-64 d'une carte de MAC 00-1A-2B-3C-4D-5E ?", "021A:2BFF:FE3C:4D5E", ["001A:2BFF:FE3C:4D5E", "021A:2B3C:4D5E:FFFE", "001A:2B3C:4D5E:FFFE"], "On insère FFFE au milieu de la MAC et on inverse le 7e bit du premier octet (00 devient 02).");
+  add(4, "De quelles trois parties se compose une adresse IPv6 globale ?", "Préfixe de routage global, ID de sous-réseau, ID d'interface", ["Préfixe réseau, masque, ID d'hôte", "Préfixe de routage global, VLAN, adresse MAC", "ID de sous-réseau, passerelle, ID d'interface"], "Typiquement un /48 fourni par le FAI, 16 bits de sous-réseau et 64 bits d'interface.");
+  add(4, "Combien de sous-réseaux /64 contient un préfixe /56 ?", "256", ["64", "128", "512"], "64 − 56 = 8 bits de sous-réseau, soit 2^8 = 256.");
+  add(4, "Que provoque [[ipv6 unicast-routing]] sur un routeur ?", "Il active le routage IPv6 et l'envoi d'annonces de routeur (RA)", ["Il crée une adresse globale statique", "Il active toutes les interfaces", "Il désactive SLAAC"], "Sans cette commande, le routeur ne route pas l'IPv6 et n'envoie pas de RA.");
+  add(4, "Comment un hôte vérifie-t-il qu'une adresse IPv6 est unique avant de l'utiliser ?", "Il envoie une sollicitation de voisin (NS) pour cette adresse", ["Il envoie une requête ARP", "Il interroge le serveur DNS", "Il envoie un écho ICMP au routeur"], "C'est la détection de doublon (DAD) : une absence de réponse signifie que l'adresse est libre.");
+  add(4, "Que représente la route [[::/0]] ?", "La route par défaut IPv6", ["L'adresse de bouclage", "Une route hôte", "Le réseau link-local"], "Le préfixe /0 correspond à toute destination, comme 0.0.0.0/0 en IPv4.");
+
+  // 5 Transport et applications
+  add(5, "Quel service reçoit les paquets dont le port de destination est 53 ?", "DNS", ["DHCP", "SMTP", "TFTP"], "DHCP utilise les ports 67 et 68, SMTP le 25 et TFTP le 69.");
+  add(5, "Quel service utilise le port 22 ?", "SSH", ["Telnet", "FTP", "HTTPS"], "Telnet utilise le port 23, FTP le 21 pour le contrôle et HTTPS le 443.");
+  add(5, "Quel protocole de messagerie utilise le port 143 ?", "IMAP", ["POP3", "SMTP", "FTP"], "POP3 utilise le port 110 et SMTP le port 25.");
+  add(5, "Quelles caractéristiques TCP et UDP ont-ils en commun ?", "Les numéros de port et la somme de contrôle", ["L'établissement de connexion en trois temps", "La fenêtre glissante", "La retransmission des segments perdus"], "Les deux utilisent des ports et un checksum ; la connexion, la fenêtre et les retransmissions sont propres à TCP.");
+  add(5, "Quel protocole de transport convient le mieux à la voix sur IP ?", "UDP", ["TCP", "ICMP", "ARP"], "UDP a peu de surcharge et ne retransmet pas : la voix tolère une perte mais pas un retard.");
+  add(5, "Quelles étapes composent l'établissement d'une connexion TCP ?", "SYN, SYN-ACK, ACK", ["SYN, ACK, FIN", "DISCOVER, OFFER, REQUEST", "ACK, SYN, SYN-ACK"], "C'est la poignée de main en trois temps ; la session se termine avec des segments FIN.");
+  add(5, "À quoi sert la fenêtre glissante de TCP ?", "À régler la quantité de données envoyées avant un acquittement", ["À numéroter les segments", "À mettre fin à la session", "À retransmettre un segment perdu"], "Le destinataire réduit la taille de la fenêtre pour demander à l'émetteur de ralentir.");
+  add(5, "Que contient un enregistrement DNS de type AAAA ?", "L'adresse IPv6 d'un hôte", ["L'adresse IPv4 d'un hôte", "Le serveur de messagerie du domaine", "Le serveur de noms faisant autorité"], "A : IPv4, MX : messagerie, NS : serveur de noms.");
+  add(5, "Quelle est la différence entre POP3 et IMAP ?", "POP3 télécharge le courrier sur le client, IMAP le garde sur le serveur", ["POP3 envoie le courrier, IMAP le reçoit", "POP3 est chiffré, IMAP ne l'est pas", "POP3 utilise UDP, IMAP utilise TCP"], "L'envoi du courrier se fait avec SMTP.");
+  add(5, "Comment un hôte distingue-t-il les réponses destinées à deux fenêtres de navigateur ouvertes en même temps ?", "Grâce au numéro de port source de chaque session", ["Grâce à l'adresse MAC", "Grâce au TTL", "Grâce au numéro de VLAN"], "Le port source choisi par le client devient le port de destination de la réponse.");
+
+  // 6 VLAN et trunks
+  add(6, "Quel est l'effet principal de la création de VLAN ?", "Réduire la taille des domaines de diffusion", ["Augmenter le nombre de domaines de collision", "Supprimer le besoin de routage", "Chiffrer le trafic"], "Chaque VLAN est son propre domaine de diffusion, avec sa propre plage d'adresses IP.");
+  add(6, "Quel trafic circule sans balise 802.1Q sur un trunk ?", "Celui du VLAN natif", ["Celui du VLAN de gestion", "Celui du VLAN 1 uniquement", "Tout le trafic"], "Le VLAN natif est le VLAN dont les trames ne sont pas étiquetées sur le trunk.");
+  add(6, "Deux hôtes de VLAN différents veulent communiquer. De quoi a-t-on besoin ?", "D'un routeur ou d'un commutateur de couche 3", ["D'un trunk entre eux", "D'un VLAN natif commun", "De DTP"], "Deux VLAN sont deux réseaux distincts : seul un équipement de couche 3 les relie.");
+  add(6, "Quelle combinaison de modes DTP forme un trunk ?", "Dynamic desirable avec dynamic auto", ["Dynamic auto avec dynamic auto", "Access avec dynamic auto", "Access avec trunk"], "Deux ports en auto attendent chacun que l'autre négocie : aucun trunk ne se forme.");
+  add(6, "Après [[erase startup-config]] et un redémarrage, des VLAN existent encore. Pourquoi ?", "Ils sont stockés dans le fichier vlan.dat de la mémoire flash", ["Ils sont stockés en NVRAM", "Ce sont des VLAN par défaut", "Ils ne se suppriment qu'en mode VTP client"], "Il faut supprimer le fichier vlan.dat puis recharger le commutateur.");
+  add(6, "Comment configurer le port du commutateur relié au routeur en router-on-a-stick ?", "En trunk 802.1Q", ["En port d'accès du VLAN 1", "En port d'accès du VLAN natif", "En port routé avec [[no switchport]]"], "Le routeur reçoit les trames de plusieurs VLAN sur une seule interface physique, d'où le trunk.");
+  add(6, "Quelle commande de sous-interface associe le VLAN 10 à [[G0/0.10]] ?", "[[encapsulation dot1Q 10]]", ["[[switchport access vlan 10]]", "[[vlan 10]]", "[[encapsulation isl 10]]"], "Le numéro de la commande doit correspondre au VLAN, sinon les hôtes ne communiquent pas.");
+  add(6, "Des hôtes du VLAN 60 sur deux commutateurs ne communiquent pas alors que le trunk est actif. Quelle est la cause probable ?", "Le VLAN 60 n'est pas autorisé sur le trunk", ["Le VLAN natif est le VLAN 1", "DTP est désactivé", "Le routeur n'a pas d'adresse IP"], "Vérifier avec [[show interfaces trunk]] la liste des VLAN autorisés.");
+  add(6, "Quels modes VTP permettent de créer des VLAN sur le commutateur ?", "Serveur et transparent", ["Client et serveur", "Client et transparent", "Uniquement serveur"], "En transparent la modification reste locale ; en client, on ne peut pas créer de VLAN.");
+
+  // 7 DHCP
+  add(7, "Dans quel ordre se déroule l'obtention d'un bail DHCPv4 ?", "DISCOVER, OFFER, REQUEST, ACK", ["OFFER, DISCOVER, REQUEST, ACK", "DISCOVER, REQUEST, OFFER, ACK", "REQUEST, OFFER, ACK, DISCOVER"], "Le client cherche un serveur, reçoit une offre, la demande, puis le serveur confirme.");
+  add(7, "Comment le client envoie-t-il son DHCPDISCOVER ?", "En diffusion, vers le port UDP 67", ["En unicast vers le serveur, port 68", "En diffusion, vers le port TCP 67", "En multicast vers FF02::1"], "Le client n'a encore ni adresse ni serveur connu : diffusion UDP vers le port 67.");
+  add(7, "Un client reçoit plusieurs DHCPOFFER. Que fait-il ?", "Il envoie un DHCPREQUEST au serveur dont il accepte l'offre", ["Il accepte toutes les offres", "Il relance un DHCPDISCOVER", "Il envoie un DHCPNAK"], "Le DHCPREQUEST désigne le serveur retenu ; les autres comprennent que leur offre est refusée.");
+  add(7, "À quoi sert [[ip helper-address]] ?", "À relayer les diffusions DHCP vers un serveur situé sur un autre réseau", ["À créer un pool DHCP", "À exclure des adresses", "À activer DHCP snooping"], "On la place sur l'interface côté clients, avec l'adresse du serveur DHCP.");
+  add(7, "Pourquoi exclut-on l'adresse de la passerelle avec [[ip dhcp excluded-address]] ?", "Pour éviter de l'attribuer à un client", ["Pour la chiffrer", "Pour qu'elle soit renouvelée plus souvent", "Pour la distribuer en dernier"], "Sans exclusion, le serveur pourrait louer l'adresse du routeur et créer un conflit.");
+  add(7, "Comment un hôte obtient-il son adresse en SLAAC ?", "Il combine le préfixe d'une annonce de routeur avec un ID d'interface qu'il génère", ["Un serveur DHCPv6 lui attribue une adresse", "Il utilise ARP", "Il copie l'adresse du routeur"], "Aucun serveur n'est nécessaire : le préfixe vient du RA, l'ID d'interface de l'hôte.");
+  add(7, "Que signale la commande [[ipv6 nd other-config-flag]] ?", "DHCPv6 sans état : adresse en SLAAC, autres paramètres (DNS) via DHCPv6", ["DHCPv6 avec état", "SLAAC seul, sans DHCPv6", "Adresse configurée à la main"], "Le drapeau O indique aux clients qu'ils trouveront des informations complémentaires auprès d'un serveur DHCPv6.");
+  add(7, "Que signale la commande [[ipv6 nd managed-config-flag]] ?", "DHCPv6 avec état : l'adresse vient du serveur DHCPv6", ["SLAAC seul", "DHCPv6 sans état", "Adresse configurée à la main"], "Le drapeau M demande aux clients d'obtenir leur adresse auprès d'un serveur DHCPv6.");
+  add(7, "Pourquoi un pool DHCPv6 sans état n'a-t-il pas de plage d'adresses ?", "Les clients construisent eux-mêmes leur adresse en SLAAC", ["Le serveur ne gère aucune information", "Il n'y a pas de passerelle", "DHCPv6 sans état n'utilise pas de serveur"], "Le serveur ne fournit que des paramètres comme le DNS et ne garde aucun état sur les clients.");
+
+  // 8 STP
+  add(8, "Que provoque une boucle de couche 2 sans STP ?", "Une tempête de diffusion et une instabilité de la table MAC", ["Un TTL à 0 sur les trames", "Une collision de VLAN", "Rien, Ethernet gère les boucles"], "Ethernet n'a pas de TTL : les trames tournent indéfiniment et saturent les liens.");
+  add(8, "Comment élit-on le pont racine ?", "Le plus petit Bridge ID (priorité, puis adresse MAC)", ["Le plus grand Bridge ID", "Le commutateur qui a le plus de ports", "Le premier commutateur démarré"], "À priorité égale, la plus petite adresse MAC l'emporte.");
+  add(8, "De quoi se compose un Bridge ID ?", "Priorité, ID système étendu (VLAN) et adresse MAC", ["Priorité, coût et ID de port", "Adresse IP et adresse MAC", "VLAN, priorité et adresse IP"], "L'ID système étendu reprend le numéro de VLAN pour PVST+.");
+  add(8, "Quels sont les rôles des ports du pont racine ?", "Tous désignés", ["Tous racine", "Tous alternatifs", "Un port racine et un port bloqué"], "Le pont racine n'a pas de port racine : tous ses ports sont désignés.");
+  add(8, "Sur un commutateur non racine, quel port est le port racine ?", "Celui qui a le chemin de plus faible coût vers le pont racine", ["Celui qui a la plus haute priorité", "Celui connecté au routeur", "Le premier port"], "Chaque commutateur non racine choisit un seul port racine : le meilleur chemin vers la racine.");
+  add(8, "Quel état a un port alternatif en RSTP ?", "Il est en discarding et sert de secours", ["Il transmet les trames", "Il apprend les MAC et transmet", "Il est désactivé"], "Il remplace le port racine si celui-ci tombe, sans attendre les anciens temporisateurs de STP.");
+  add(8, "Quelle commande affiche le pont racine et le rôle des ports ?", "[[show spanning-tree]]", ["[[show vlan brief]]", "[[show mac address-table]]", "[[show interfaces trunk]]"], "La commande présente aussi le Bridge ID local et l'état de chaque port, VLAN par VLAN.");
+
+  // 9 Routage statique
+  add(9, "Quelle commande est une route par défaut IPv4 correcte ?", "[[ip route 0.0.0.0 0.0.0.0 S0/0/0]]", ["[[ip route 0.0.0.0 255.255.255.255 S0/0/0]]", "[[ip route 255.255.255.255 0.0.0.0 S0/0/0]]", "[[ip route 0.0.0.0 255.0.0.0 S0/0/0]]"], "Le masque 0.0.0.0 fait correspondre toutes les destinations.");
+  add(9, "Quelle commande crée une route par défaut IPv6 vers S0/0/1 ?", "[[ipv6 route ::/0 serial 0/0/1]]", ["[[ipv6 route ::1/0 serial 0/0/1]]", "[[ip route ::/0 serial 0/0/1]]", "[[ipv6 route 0.0.0.0/0 serial 0/0/1]]"], "Le préfixe ::/0 est l'équivalent IPv6 de 0.0.0.0/0, avec la commande [[ipv6 route]].");
+  add(9, "Une route statique de secours vers un réseau appris par OSPF (distance administrative 110) doit avoir quelle distance administrative ?", "Supérieure à 110, par exemple 130", ["1", "90", "110"], "Une route flottante n'entre dans la table que si la route principale disparaît : sa distance doit être plus grande.");
+  add(9, "Quelle est la distance administrative par défaut d'une route statique avec adresse de saut suivant ?", "1", ["0", "90", "110"], "0 est la distance d'un réseau directement connecté ; 90 correspond à EIGRP et 110 à OSPF.");
+  add(9, "Un routeur a les routes [[10.0.0.0/8]], [[10.1.0.0/16]] et [[10.1.1.0/24]]. Laquelle est choisie pour 10.1.1.5 ?", "10.1.1.0/24", ["10.0.0.0/8", "10.1.0.0/16", "Les trois, en répartition de charge"], "Le routeur retient la plus longue correspondance, donc le préfixe le plus précis.");
+  add(9, "Quel code désigne une route statique dans la table de routage ?", "S", ["C", "L", "D"], "C : réseau connecté, L : adresse locale, D : route EIGRP.");
+  add(9, "Pourquoi une route statique IPv6 vers une adresse link-local exige-t-elle l'interface de sortie ?", "Une adresse link-local n'est unique que sur son lien", ["Parce que la distance administrative vaut 0", "Parce que CEF est désactivé", "Parce que le masque est /128"], "Le routeur doit savoir sur quel lien chercher ce voisin : c'est une route entièrement spécifiée.");
+  add(9, "Le réseau de destination d'une route statique n'existe plus. Que devient la route ?", "Elle reste jusqu'à ce qu'on la supprime avec [[no ip route]]", ["Elle disparaît seule", "Elle devient une route flottante", "Sa distance passe à 255"], "Une route statique ne s'adapte pas : l'administrateur doit la retirer.");
+  add(9, "Quel avantage ont les routes statiques sur le routage dynamique ?", "Aucun échange de mises à jour : moins de bande passante et de CPU", ["Elles s'adaptent seules aux pannes", "Elles convergent plus vite", "Elles découvrent les réseaux voisins"], "Elles conviennent aux petits réseaux ; en contrepartie tout changement se fait à la main.");
+  add(9, "Après un changement de FAI, les employés n'ont plus Internet. Que faut-il vérifier ?", "Que la route par défaut pointe vers le nouveau FAI et que l'ancienne a été retirée", ["Qu'il n'existe aucune route par défaut", "Que la distance administrative vaut 255", "Que tous les VLAN sont créés"], "Une ancienne route par défaut peut continuer à envoyer le trafic vers l'ancien fournisseur.");
+
+  // ===== Questions originales (créées à partir des diapos et des TP) =====
+  // 0 Modèles et IOS
+  orig(0, "Quelle commande enregistre la configuration en cours pour qu'elle survive à un redémarrage ?", "[[copy running-config startup-config]]", ["[[copy startup-config running-config]]", "[[erase startup-config]]", "[[show running-config]]"], "La running-config est en RAM ; la copier vers la startup-config la place en NVRAM.");
+  orig(0, "Quelle commande génère les clés nécessaires à SSH (après avoir défini le nom d'hôte et le nom de domaine) ?", "[[crypto key generate rsa]]", ["[[ssh generate keys]]", "[[ip ssh key]]", "[[transport input ssh]]"], "Sans nom d'hôte ni nom de domaine, IOS refuse de générer les clés RSA ; [[transport input ssh]] limite ensuite les lignes vty à SSH.");
+  orig(0, "Quelle commande, sur les lignes vty, demande une authentification avec les comptes créés par [[username]] ?", "[[login local]]", ["[[login]]", "[[password local]]", "[[enable secret]]"], "[[login]] seul utilise le mot de passe de la ligne ; [[login local]] utilise la base d'utilisateurs locale, nécessaire pour SSH.");
+  orig(0, "Dans quel mode tape-t-on [[line vty 0 15]] ?", "Configuration globale ([[Switch(config)#]])", ["Mode utilisateur ([[Switch>]])", "Mode privilégié ([[Switch#]])", "Configuration d'interface ([[Switch(config-if)#]])"], "[[line vty]] se saisit en configuration globale et ouvre le mode [[config-line]].");
+  // 1 Physique et liaison
+  orig(1, "Sans auto-MDIX, quel câble relie deux commutateurs entre eux ?", "Un câble croisé", ["Un câble droit", "Un câble console (roll-over)", "Un câble série"], "Deux équipements de même type (commutateur-commutateur, PC-PC) demandent un câble croisé ; auto-MDIX corrige automatiquement.");
+  orig(1, "Que désignent les 24 premiers bits d'une adresse MAC ?", "Le fabricant (OUI)", ["Le numéro de VLAN", "Le type de support", "Le numéro de port du commutateur"], "Le constructeur attribue les 24 derniers bits ; l'adresse fait 48 bits, notée en 12 chiffres hexadécimaux.");
+  orig(1, "Pourquoi CSMA/CD n'est-il plus nécessaire sur une liaison full-duplex entre un PC et un commutateur ?", "Il n'y a pas de collision, car émission et réception utilisent des chemins séparés", ["Le commutateur chiffre les trames", "Le PC attend toujours son tour", "Les trames sont acquittées par TCP"], "Le semi-duplex partage un support, d'où les collisions ; en full-duplex, chaque sens a sa propre paire.");
+  orig(1, "Quelle est la différence entre un domaine de collision et un domaine de diffusion ?", "Un commutateur sépare les domaines de collision mais pas ceux de diffusion", ["Un commutateur sépare les domaines de diffusion mais pas ceux de collision", "Un concentrateur (hub) sépare les domaines de collision", "Les deux sont délimités par le même équipement"], "Chaque port de commutateur est un domaine de collision ; seuls un routeur ou des VLAN coupent la diffusion.");
+  // 2 Réseau et ARP
+  orig(2, "Un hôte 192.168.1.10/24 veut joindre 192.168.2.20. À qui envoie-t-il la trame ?", "À sa passerelle par défaut, après avoir résolu sa MAC par ARP", ["Directement à 192.168.2.20", "Au serveur DNS", "En diffusion à tout le réseau"], "192.168.2.20 est hors du /24 : l'hôte confie le paquet au routeur.");
+  orig(2, "Quelle commande Cisco affiche la table ARP d'un routeur ?", "[[show ip arp]]", ["[[show arp table]]", "[[show mac address-table]]", "[[show ip route]]"], "La table d'adresses MAC du commutateur est une autre table, qui associe MAC et ports.");
+  orig(2, "Quel message ICMP un routeur renvoie-t-il quand il n'a pas de route vers la destination ?", "Destination Unreachable", ["Time Exceeded", "Echo Reply", "Redirect"], "Time Exceeded signale un TTL arrivé à 0 ; Destination Unreachable un réseau, un hôte ou un port injoignable.");
+  // 3 Sous-réseaux IPv4
+  orig(3, "On dispose de 192.168.10.0/24. On veut A : 100 hôtes, B : 50 hôtes, C : 20 hôtes (VLSM). Quels préfixes minimaux ?", "A : /25, B : /26, C : /27", ["A : /24, B : /25, C : /26", "A : /26, B : /26, C : /27", "A : /25, B : /25, C : /26"], "126 hôtes pour un /25, 62 pour un /26, 30 pour un /27. On attribue d'abord le plus grand besoin.");
+  orig(3, "192.168.10.0/25 est attribué à A. Quel est le premier réseau /26 libre pour B ?", "192.168.10.128/26", ["192.168.10.64/26", "192.168.10.100/26", "192.168.10.127/26"], "Le /25 occupe .0 à .127 ; un /26 doit être aligné sur un multiple de 64, donc .128.");
+  orig(3, "Quelle est la première adresse utilisable de 10.0.4.64/27 ?", "10.0.4.65", ["10.0.4.64", "10.0.4.66", "10.0.4.1"], "10.0.4.64 est l'adresse réseau ; la diffusion est 10.0.4.95.");
+  orig(3, "Quel est le masque générique (wildcard) d'un /26 ?", "0.0.0.63", ["0.0.0.192", "0.0.0.31", "255.255.255.192"], "On inverse le masque : 255.255.255.192 donne 0.0.0.63. Il sert notamment pour la commande [[network]] d'OSPF.");
+  orig(3, "Combien de bits d'hôtes faut-il emprunter à un /24 pour créer au moins 5 sous-réseaux ?", "3", ["2", "4", "5"], "2^2 = 4 est trop peu ; 2^3 = 8 sous-réseaux, donc un /27.");
+  orig(3, "Quelle est la valeur binaire de 192 ?", "11000000", ["11100000", "10000001", "11000001"], "128 + 64 = 192, soit les deux bits de poids fort à 1.");
+  // 4 IPv6
+  orig(4, "Quelle est la forme abrégée de 2001:0DB8:0000:0000:0000:00A0:0000:0001 ?", "2001:DB8::A0:0:1", ["2001:DB8::A0::1", "2001:DB8:A0::1", "2001::DB8::A0:0:1"], "On supprime les zéros de tête et on remplace la plus longue suite de groupes nuls par [[::]], une seule fois.");
+  orig(4, "Quelle commande résume les adresses IPv6 des interfaces d'un routeur ?", "[[show ipv6 interface brief]]", ["[[show ip interface brief]]", "[[show ipv6 route brief]]", "[[show interfaces ipv6]]"], "[[show ip interface brief]] n'affiche que l'IPv4.");
+  orig(4, "À quoi sert une adresse link-local (FE80::/10) ?", "À communiquer sur le lien local (voisins, routeur, annonces RA) ; elle n'est pas routée", ["À joindre Internet", "À identifier un VLAN", "À remplacer l'adresse de diffusion"], "Chaque interface IPv6 en possède une ; les protocoles de voisinage et le saut suivant des routes l'utilisent.");
+  // 5 Transport et applications
+  orig(5, "Quel segment TCP amorce la fermeture normale d'une connexion ?", "FIN", ["SYN", "RST", "PSH"], "FIN termine proprement ; RST coupe brutalement.");
+  orig(5, "Quel port utilise HTTPS par défaut ?", "443 (TCP)", ["80 (TCP)", "8080 (TCP)", "53 (UDP)"], "HTTP utilise le port 80 ; 53 est celui de DNS.");
+  orig(5, "Pourquoi une requête DNS classique utilise-t-elle UDP ?", "Elle tient dans un seul datagramme, UDP suffit et évite la poignée de main TCP", ["UDP est chiffré", "UDP garantit la livraison", "DNS ne fonctionne pas avec TCP"], "DNS bascule sur TCP pour les réponses volumineuses ou les transferts de zone.");
+  orig(5, "Quelle commande Windows affiche les connexions TCP actives et les ports en écoute ?", "[[netstat]]", ["[[ipconfig]]", "[[arp -a]]", "[[nslookup]]"], "[[nslookup]] interroge le DNS ; [[ipconfig]] affiche la configuration IP.");
+  // 6 VLAN et trunks
+  orig(6, "Quelle séquence crée le VLAN 20 nommé RH ?", "[[vlan 20]] puis [[name RH]]", ["[[interface vlan 20]] puis [[name RH]]", "[[switchport vlan 20 name RH]]", "[[vlan name RH 20]]"], "[[interface vlan 20]] crée l'interface virtuelle (SVI), pas le VLAN lui-même.");
+  orig(6, "Quelle commande affiche la liste des VLAN et les ports d'accès qui leur sont affectés ?", "[[show vlan brief]]", ["[[show interfaces trunk]]", "[[show mac address-table]]", "[[show ip interface brief]]"], "Les ports trunk n'y apparaissent pas ; ils se vérifient avec [[show interfaces trunk]].");
+  orig(6, "Pourquoi choisit-on un VLAN natif autre que le VLAN 1 (par exemple 99) ?", "Pour des raisons de sécurité : le VLAN 1 est celui de tous les ports par défaut", ["Parce que le VLAN 1 n'existe pas sur un trunk", "Parce que le VLAN 1 est limité à 10 ports", "Parce que 802.1Q interdit le VLAN 1"], "Il faut configurer le même VLAN natif aux deux extrémités du trunk.");
+  orig(6, "Comment donne-t-on une adresse IP de gestion à un commutateur ?", "Sur une interface virtuelle : [[interface vlan 99]] puis [[ip address]]", ["Sur un port d'accès avec [[ip address]]", "Sur la ligne console", "Avec [[switchport ip address]]"], "Un commutateur de couche 2 n'a pas d'adresse IP sur ses ports physiques ; la SVI porte l'adresse.");
+  orig(6, "En router-on-a-stick, combien d'interfaces physiques du routeur faut-il pour router 3 VLAN ?", "Une seule, avec 3 sous-interfaces", ["Trois interfaces physiques", "Deux interfaces physiques", "Aucune"], "Chaque sous-interface porte l'encapsulation 802.1Q d'un VLAN et sert de passerelle à ce VLAN.");
+  // 7 DHCP
+  orig(7, "Quelle commande affiche les baux attribués par un routeur serveur DHCP ?", "[[show ip dhcp binding]]", ["[[show ip dhcp pool]]", "[[show dhcp lease]]", "[[show ip interface]]"], "[[show ip dhcp pool]] donne l'état du pool (adresses louées, plage).");
+  orig(7, "Quelle commande Windows redemande un bail DHCP ?", "[[ipconfig /renew]]", ["[[ipconfig /flushdns]]", "[[ipconfig /all]]", "[[arp -d]]"], "[[ipconfig /release]] libère d'abord le bail actuel.");
+  orig(7, "Quelle commande, sur une interface, active le serveur DHCPv6 d'un pool nommé PROF ?", "[[ipv6 dhcp server PROF]]", ["[[ipv6 dhcp pool PROF]]", "[[ip dhcp pool PROF]]", "[[ipv6 dhcp relay PROF]]"], "[[ipv6 dhcp pool]] crée le pool en configuration globale ; [[ipv6 dhcp server]] le rattache à l'interface.");
+  orig(7, "Un PC obtient l'adresse 169.254.8.3. Que peut-on en conclure ?", "Il n'a reçu aucune réponse d'un serveur DHCP", ["Il a obtenu un bail valide", "Il utilise une adresse privée de classe C", "Le serveur DHCP est en IPv6"], "Windows s'auto-attribue une adresse APIPA quand le DHCP ne répond pas.");
+  // 8 STP
+  orig(8, "Quel est le coût STP par défaut (802.1D) d'un lien Gigabit Ethernet ?", "4", ["19", "100", "2"], "Table 802.1D : 10 Gb/s = 2, 1 Gb/s = 4, 100 Mb/s = 19, 10 Mb/s = 100.");
+  orig(8, "Un commutateur non racine a un lien Gigabit direct vers la racine et un autre chemin via deux liens FastEthernet. Quel port devient port racine ?", "Celui du lien Gigabit direct (coût 4 contre 38)", ["Celui du chemin via FastEthernet (19 + 19)", "Les deux", "Aucun, le commutateur est racine"], "Le coût du chemin racine additionne les coûts des ports entrants le long du chemin.");
+  orig(8, "À quel rythme les BPDU sont-ils envoyés par défaut ?", "Toutes les 2 secondes", ["Toutes les 30 secondes", "Une seule fois au démarrage", "Toutes les 10 minutes"], "Les BPDU servent à élire la racine, puis à maintenir la topologie.");
+  orig(8, "Dans quel état un port STP apprend-il les adresses MAC sans encore transmettre de données ?", "Apprentissage (learning)", ["Blocage", "Écoute (listening)", "Acheminement (forwarding)"], "Écoute : BPDU seulement, pas d'apprentissage. Apprentissage : la table MAC se remplit. Acheminement : les données passent.");
+  // 9 Routage statique
+  orig(9, "Quelle commande crée une route statique vers 172.16.0.0/16 via 10.0.0.2 ?", "[[ip route 172.16.0.0 255.255.0.0 10.0.0.2]]", ["[[ip route 172.16.0.0 0.0.255.255 10.0.0.2]]", "[[ip route 10.0.0.2 172.16.0.0 255.255.0.0]]", "[[ip route 172.16.0.0/16 10.0.0.2]]"], "La syntaxe est : réseau, masque (pas de wildcard), puis saut suivant ou interface de sortie.");
+  orig(9, "Dans [[show ip route]], que signifie le code [[L]] ?", "L'adresse locale de l'interface (route /32)", ["Une route apprise par un protocole de liaison", "Une route statique", "Un réseau directement connecté"], "[[C]] désigne le réseau connecté ; [[L]] l'adresse propre de l'interface.");
+  orig(9, "Quel code de [[show ip route]] indique une route statique candidate par défaut ?", "[[S*]]", ["[[S]]", "[[C*]]", "[[D*]]"], "L'astérisque marque la route candidate par défaut.");
+  orig(9, "Un PC peut envoyer un ping vers un réseau distant, mais ne reçoit aucune réponse. Quelle est une cause probable ?", "Le routeur distant n'a pas de route de retour vers le réseau du PC", ["Le TTL est trop grand", "Le PC a un masque en /32", "Le commutateur n'a pas de table MAC"], "Le routage doit exister dans les deux sens : le paquet arrive, mais la réponse n'a pas de chemin.");
+  // 10 Routage dynamique
+  orig(10, "Quelle est la différence fondamentale entre RIP et OSPF ?", "RIP est à vecteur de distance, OSPF est à état de liens", ["RIP est à état de liens, OSPF est à vecteur de distance", "RIP est un protocole statique, OSPF est dynamique", "RIP fonctionne en couche 2, OSPF en couche 3"], "OSPF converge plus vite et passe mieux à l'échelle, car chaque routeur connaît toute la topologie de sa zone.");
+  orig(10, "Lequel n'est PAS un rôle d'un protocole de routage dynamique ?", "Attribuer automatiquement des adresses IP aux hôtes", ["Découvrir les réseaux distants", "Choisir le meilleur chemin", "Trouver un nouveau chemin quand le meilleur disparaît"], "L'attribution d'adresses relève de DHCP.");
+  orig(10, "Dans le mode [[router rip]], quelle commande active la version 2 ?", "[[version 2]]", ["[[router ripv2]]", "[[rip version 2]]", "[[ip rip v2]]"], "RIPv1 est classful ; RIPv2 transporte le masque.");
+  orig(10, "À quoi sert [[no auto-summary]] avec RIPv2 ?", "À empêcher le résumé automatique aux frontières de réseaux classful", ["À désactiver RIP sur une interface", "À supprimer la route par défaut", "À chiffrer les mises à jour"], "Sans elle, des sous-réseaux discontinus peuvent être résumés à tort et créer des problèmes de routage.");
+  orig(10, "À quoi sert [[passive-interface]] ?", "À ne pas envoyer de mises à jour de routage sur une interface (côté LAN) tout en annonçant son réseau", ["À désactiver l'interface", "À bloquer le trafic des utilisateurs", "À remplacer la commande [[network]]"], "Envoyer des mises à jour sur un LAN d'utilisateurs gaspille de la bande passante et expose le routage.");
+  orig(10, "Quelle commande vérifie les protocoles de routage actifs, les réseaux annoncés et l'ID de routeur OSPF ?", "[[show ip protocols]]", ["[[show ip route summary]]", "[[show running-interfaces]]", "[[show ip arp]]"], "On peut filtrer : [[show ip protocols | include Router ID]].");
+  orig(10, "Quel type de paquet OSPF sert à découvrir les voisins et à maintenir les adjacences ?", "Hello", ["LSU (Link-State Update)", "DBD (Database Description)", "LSAck"], "Les cinq types sont Hello, DBD, LSR, LSU et LSAck.");
+  orig(10, "Dans quel ordre un routeur Cisco choisit-il son ID de routeur OSPF ?", "ID configuré avec [[router-id]], sinon plus haute adresse de bouclage, sinon plus haute adresse IPv4 active d'une interface physique", ["Plus haute adresse physique, puis bouclage, puis [[router-id]]", "Plus haute adresse de bouclage, puis [[router-id]], puis interface physique", "Plus basse adresse IPv4 active, puis [[router-id]]"], "Configurer [[router-id]] est la méthode recommandée ; un changement demande [[clear ip ospf process]].");
+  orig(10, "Pourquoi une interface Gigabit et une interface FastEthernet ont-elles le même coût OSPF par défaut ?", "La bande passante de référence par défaut est 10^8 : 10^8 / 10^9 = 0,1 est arrondi à 1", ["OSPF ignore la bande passante", "Les deux interfaces ont la même vitesse", "Le coût dépend seulement du nombre de sauts"], "On corrige avec [[auto-cost reference-bandwidth 1000]] sur tous les routeurs, ou avec [[ip ospf cost]].");
+  orig(10, "À priorité égale, quel routeur est élu DR sur un réseau Ethernet multi-accès ?", "Celui qui a l'ID de routeur le plus élevé", ["Celui qui a l'ID de routeur le plus bas", "Le premier routeur démarré", "Celui qui a le plus d'interfaces"], "Le deuxième plus élevé devient BDR ; les autres sont des DROTHER.");
+  orig(10, "Quelle commande annonce 10.10.1.0/24 dans la zone 0 d'OSPF ?", "[[network 10.10.1.0 0.0.0.255 area 0]]", ["[[network 10.10.1.0 255.255.255.0 area 0]]", "[[network 10.10.1.0/24 area 0]]", "[[ip route 10.10.1.0 0.0.0.255 area 0]]"], "OSPF utilise un masque générique ; la zone 0 est la bonne pratique pour une zone unique.");
+  orig(10, "Quelle adresse multicast les DROTHER utilisent-ils pour envoyer leurs mises à jour au DR et au BDR ?", "224.0.0.6", ["224.0.0.5", "224.0.0.9", "224.0.0.10"], "224.0.0.5 vise tous les routeurs OSPF ; 224.0.0.9 est celle de RIPv2 et 224.0.0.10 celle d'EIGRP.");
+  orig(10, "Quelles valeurs par défaut ont les minuteurs Hello et Dead d'OSPF sur Ethernet ?", "Hello 10 s, Dead 40 s", ["Hello 2 s, Dead 6 s", "Hello 30 s, Dead 120 s", "Hello 40 s, Dead 10 s"], "Visible avec [[show ip ospf interface]]. Deux voisins doivent avoir les mêmes minuteurs.");
+  orig(10, "Quelle commande désactive l'élection DR/BDR sur une liaison Ethernet point à point entre deux routeurs ?", "[[ip ospf network point-to-point]]", ["[[ip ospf priority 255]]", "[[passive-interface]]", "[[no router-id]]"], "À configurer sur les interfaces concernées, aux deux extrémités.");
+
+  Q.forEach(function (q, i) { q.id = i; });
+
+  var KEY = "sr71-qcm-erreurs";
+  var wrongIds = [];
+  try { var raw = localStorage.getItem(KEY); if (raw) wrongIds = JSON.parse(raw).filter(function (n) { return typeof n === "number" && Q[n]; }); } catch (e) { wrongIds = []; }
+  function saveWrong() { try { localStorage.setItem(KEY, JSON.stringify(wrongIds)); } catch (e) {} }
+
+  var app = document.getElementById("app");
+  var selected = THEMES.map(function () { return true; });
+  var count = 20;
+  var onlyWrong = false;
+  var source = "exam";
+  var session = null;
+
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function fmt(s) { return esc(s).replace(/\[\[(.+?)\]\]/g, "<code>$1</code>"); }
+  function plain(s) { return String(s).replace(/\[\[(.+?)\]\]/g, "$1"); }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function countFor(t) { return Q.filter(function (q) { return q.t === t && q.src === source; }).length; }
+  function countSrc(src) { return Q.filter(function (q) { return q.src === src; }).length; }
+  function wrongCount() { return Q.filter(function (q) { return q.src === source && wrongIds.indexOf(q.id) >= 0; }).length; }
+
+  function poolFor() {
+    return Q.filter(function (q) {
+      if (q.src !== source || !selected[q.t]) return false;
+      if (onlyWrong && wrongIds.indexOf(q.id) < 0) return false;
+      return true;
+    });
+  }
+
+  /* ---------- Vue réglages ---------- */
+  function renderSetup() {
+    if (!wrongCount()) onlyWrong = false;
+    var pool = poolFor();
+    var n = count === 0 ? pool.length : Math.min(count, pool.length);
+    var html = "";
+    var nExam = countSrc("exam"), nOrig = countSrc("orig");
+    html += '<header><p class="eyebrow">SR71 · Réseaux</p><h1>QCM Réseaux SR71</h1>';
+    html += '<p class="muted">' + (source === "exam"
+      ? nExam + ' questions reformulées d\'après les examens CCNA 1 et 2, sur les thèmes présents à la fois dans ces examens et dans le cours.'
+      : nOrig + ' questions créées pour ce QCM à partir des diapos et des TP, en dehors de la banque d\'examens. Elles couvrent aussi le routage dynamique (RIP, OSPF), absent des examens.') + '</p></header>';
+    html += '<div class="tabs" role="tablist" aria-label="Section">';
+    html += '<button class="tab" type="button" role="tab" data-s="exam" aria-selected="' + (source === "exam") + '"><span class="t">Banque d\'examens CCNA</span><span class="d">' + nExam + ' questions · inspirées des examens</span></button>';
+    html += '<button class="tab" type="button" role="tab" data-s="orig" aria-selected="' + (source === "orig") + '"><span class="t">Questions originales</span><span class="d">' + nOrig + ' questions · créées par Claude, hors banque</span></button>';
+    html += '</div>';
+    html += '<section class="panel"><div class="row between"><h2>Thèmes</h2><div class="row"><button class="btn-quiet" id="all" type="button">Tout cocher</button><button class="btn-quiet" id="none" type="button">Tout décocher</button></div></div>';
+    html += '<div class="themes">';
+    THEMES.forEach(function (th, i) {
+      if (!countFor(i)) return;
+      html += '<button class="theme" type="button" data-t="' + i + '" aria-pressed="' + selected[i] + '"><span class="tick" aria-hidden="true"></span><span><span class="name">' + esc(th.name) + '</span><span class="meta">' + esc(th.mods) + ' · ' + countFor(i) + ' questions</span></span></button>';
+    });
+    html += '</div>';
+    html += '<div class="field"><label for="count">Nombre de questions</label><select id="count">';
+    [10, 20, 30, 0].forEach(function (v) { html += '<option value="' + v + '"' + (v === count ? " selected" : "") + ">" + (v === 0 ? "Toutes" : v) + "</option>"; });
+    html += '</select></div>';
+    if (wrongCount()) {
+      html += '<label class="check"><input type="checkbox" id="onlywrong"' + (onlyWrong ? " checked" : "") + '> Seulement mes erreurs précédentes (' + wrongCount() + ')</label>';
+    }
+    html += '<div class="row"><button class="btn" id="start" type="button"' + (n === 0 ? " disabled" : "") + '>Commencer (' + n + ' questions)</button>';
+    if (n === 0) html += '<span class="hint">Aucune question pour cette sélection.</span>';
+    html += '</div><p class="hint">Au clavier : touches 1 à 4 pour répondre, Entrée pour passer à la suite.</p></section>';
+    app.innerHTML = html;
+
+    Array.prototype.forEach.call(app.querySelectorAll(".tab"), function (b) {
+      b.addEventListener("click", function () { source = b.getAttribute("data-s"); renderSetup(); var nb = app.querySelector('.tab[data-s="' + source + '"]'); if (nb) nb.focus(); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll(".theme"), function (b) {
+      b.addEventListener("click", function () { var i = +b.getAttribute("data-t"); selected[i] = !selected[i]; renderSetup(); var nb = app.querySelector('.theme[data-t="' + i + '"]'); if (nb) nb.focus(); });
+    });
+    document.getElementById("all").addEventListener("click", function () { selected = THEMES.map(function () { return true; }); renderSetup(); });
+    document.getElementById("none").addEventListener("click", function () { selected = THEMES.map(function () { return false; }); renderSetup(); });
+    document.getElementById("count").addEventListener("change", function (e) { count = +e.target.value; renderSetup(); document.getElementById("count").focus(); });
+    var ow = document.getElementById("onlywrong");
+    if (ow) ow.addEventListener("change", function (e) { onlyWrong = e.target.checked; renderSetup(); document.getElementById("onlywrong").focus(); });
+    document.getElementById("start").addEventListener("click", function () { startSession(shuffle(poolFor()).slice(0, n)); });
+  }
+
+  /* ---------- Série ---------- */
+  function startSession(list) {
+    session = { items: list.map(function (q) { return { q: q, order: shuffle(q.o.map(function (_, i) { return i; })), picked: null }; }), i: 0, score: 0 };
+    renderQuestion();
+  }
+
+  var LETTERS = ["A", "B", "C", "D"];
+
+  function renderQuestion() {
+    var it = session.items[session.i];
+    var total = session.items.length;
+    var html = '<section class="panel">';
+    html += '<div class="progress"><div class="row between"><span class="eyebrow">' + esc(THEMES[it.q.t].name) + (it.q.src === "orig" ? " · originale" : "") + '</span><span class="eyebrow">Question ' + (session.i + 1) + ' / ' + total + ' · Score ' + session.score + '</span></div><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + session.i + '"><i style="width:' + Math.round(session.i / total * 100) + '%"></i></div></div>';
+    html += '<h2 class="qtext" id="qtext">' + fmt(it.q.q) + '</h2>';
+    html += '<ul class="opts" aria-labelledby="qtext">';
+    it.order.forEach(function (oi, pos) {
+      html += '<li><button type="button" class="opt" data-pos="' + pos + '" aria-disabled="false"><span class="key" aria-hidden="true">' + LETTERS[pos] + '</span><span class="label">' + fmt(it.q.o[oi]) + '</span></button></li>';
+    });
+    html += '</ul><div id="fb"></div>';
+    html += '<div class="row between"><button class="btn-quiet" id="quit" type="button">Abandonner</button><button class="btn" id="next" type="button" hidden></button></div>';
+    html += '</section>';
+    app.innerHTML = html;
+
+    Array.prototype.forEach.call(app.querySelectorAll(".opt"), function (b) {
+      b.addEventListener("click", function () { pick(+b.getAttribute("data-pos")); });
+    });
+    document.getElementById("quit").addEventListener("click", function () { session = null; renderSetup(); });
+    document.getElementById("next").addEventListener("click", nextQuestion);
+  }
+
+  function pick(pos) {
+    var it = session.items[session.i];
+    if (it.picked !== null || pos >= it.order.length) return;
+    it.picked = pos;
+    var right = it.order[pos] === 0;
+    if (right) session.score++;
+    Array.prototype.forEach.call(app.querySelectorAll(".opt"), function (b) {
+      var p = +b.getAttribute("data-pos");
+      b.setAttribute("aria-disabled", "true");
+      if (it.order[p] === 0) b.classList.add("is-right");
+      else if (p === pos) b.classList.add("is-wrong");
+    });
+    var fb = document.getElementById("fb");
+    fb.innerHTML = '<div class="feedback ' + (right ? "ok" : "ko") + '" role="status"><strong>' + (right ? "Correct" : "Incorrect") + "</strong><span>" + fmt(it.q.e) + "</span></div>";
+    var nb = document.getElementById("next");
+    nb.textContent = session.i + 1 === session.items.length ? "Voir les résultats" : "Question suivante";
+    nb.hidden = false;
+    nb.focus();
+  }
+
+  function nextQuestion() {
+    if (session.i + 1 >= session.items.length) { finish(); return; }
+    session.i++;
+    renderQuestion();
+  }
+
+  /* ---------- Résultats ---------- */
+  function finish() {
+    session.items.forEach(function (it) {
+      var right = it.order[it.picked] === 0;
+      var k = wrongIds.indexOf(it.q.id);
+      if (right && k >= 0) wrongIds.splice(k, 1);
+      if (!right && k < 0) wrongIds.push(it.q.id);
+    });
+    saveWrong();
+    var total = session.items.length;
+    var pct = Math.round(session.score / total * 100);
+    var per = {};
+    session.items.forEach(function (it) {
+      var p = per[it.q.t] || (per[it.q.t] = { ok: 0, n: 0 });
+      p.n++; if (it.order[it.picked] === 0) p.ok++;
+    });
+    var misses = session.items.filter(function (it) { return it.order[it.picked] !== 0; });
+    var html = '<section class="panel"><p class="eyebrow">Résultats</p><div class="score"><span class="big">' + session.score + ' / ' + total + '</span><span class="muted">' + pct + ' % de bonnes réponses</span></div>';
+    html += '<h2>Par thème</h2><div class="bytheme">';
+    Object.keys(per).sort(function (a, b) { return per[a].ok / per[a].n - per[b].ok / per[b].n; }).forEach(function (t) {
+      var p = per[t], r = p.ok / p.n, cls = r < 0.5 ? "low" : r < 0.8 ? "mid" : "high";
+      html += '<div class="bt"><span>' + esc(THEMES[t].name) + '</span><span class="n">' + p.ok + ' / ' + p.n + '</span><div class="bar"><i class="' + cls + '" style="width:' + Math.round(r * 100) + '%"></i></div></div>';
+    });
+    html += '</div>';
+    if (misses.length) {
+      html += '<h2>Questions à revoir (' + misses.length + ')</h2>';
+      misses.forEach(function (it) {
+        html += '<details class="miss"><summary>' + fmt(it.q.q) + '</summary><div class="body"><p><span class="tag-bad">Votre réponse :</span> ' + fmt(it.q.o[it.order[it.picked]]) + '</p><p><span class="tag-good">Bonne réponse :</span> ' + fmt(it.q.o[0]) + '</p><p class="muted">' + fmt(it.q.e) + '</p></div></details>';
+      });
+    } else {
+      html += '<p>Aucune erreur sur cette série.</p>';
+    }
+    html += '<div class="row"><button class="btn" id="again" type="button">Nouvelle série</button>';
+    if (misses.length) html += '<button class="btn-quiet" id="redo" type="button">Refaire mes erreurs</button>';
+    html += '</div></section>';
+    app.innerHTML = html;
+    document.getElementById("again").addEventListener("click", function () { session = null; renderSetup(); });
+    var rd = document.getElementById("redo");
+    if (rd) rd.addEventListener("click", function () { startSession(shuffle(misses.map(function (m) { return m.q; }))); });
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!session || e.ctrlKey || e.metaKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName) || "";
+    if (tag === "SELECT" || tag === "INPUT") return;
+    var it = session.items[session.i];
+    if (!it || !document.getElementById("qtext")) return;
+    if (/^[1-4]$/.test(e.key)) { pick(+e.key - 1); }
+    else if (/^[a-dA-D]$/.test(e.key)) { pick(e.key.toUpperCase().charCodeAt(0) - 65); }
+    else if (e.key === "Enter" && it.picked !== null) { e.preventDefault(); nextQuestion(); }
+  });
+
+  renderSetup();
+})();
+</script>
+
+</body>
+</html>
